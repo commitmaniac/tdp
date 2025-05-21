@@ -10,6 +10,12 @@
 #define FLAG_IMPLEMENTATION
 #include "flag.h"
 
+typedef struct {
+    char *base;
+    char *items;
+    char *result;
+} TikTok_JSON_Keys;
+
 void usage(FILE *stream, const char *prog) {
     fprintf(stream, "Usage: %s [OPTIONS] PATH\n", prog);
     flag_print_options(stream);
@@ -17,10 +23,11 @@ void usage(FILE *stream, const char *prog) {
 
 int main(int argc, char **argv) {
     bool *help = flag_bool("help", false, "Print this help message");
+    bool *liked = flag_bool("liked", false, "Parse and print liked videos");
 
     if (!flag_parse(argc, argv)) {
         usage(stderr, flag_program_name());
-        flag_print_options(stderr);
+        flag_print_error(stderr);
         exit(1);
     }
 
@@ -61,8 +68,22 @@ int main(int argc, char **argv) {
     cJSON *json = cJSON_Parse(buff);
     cJSON *activity = cJSON_GetObjectItem(json, "Activity");
 
-    char *result = cJSON_Print(activity);
-    printf("%s\n", result);
+    TikTok_JSON_Keys key;
+
+    if (*liked) {
+        key.base = "Like List";
+        key.items = "ItemFavoriteList";
+        key.result = "link";
+    }
+
+    cJSON *base = cJSON_GetObjectItem(activity, key.base);
+    cJSON *items = cJSON_GetObjectItem(base, key.items);
+    cJSON *video = NULL;
+    cJSON_ArrayForEach(video, items) {
+        cJSON *link = cJSON_GetObjectItem(video, key.result);
+        char *result = cJSON_GetStringValue(link);
+        printf("%s\n", result);
+    }
 
     cJSON_free(json);
     return 0;
