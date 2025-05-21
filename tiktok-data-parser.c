@@ -7,8 +7,43 @@
 
 #include <cjson/cJSON.h>
 
-int main() {
-    FILE *file = fopen("user_data_tiktok.json", "r");
+#define FLAG_IMPLEMENTATION
+#include "flag.h"
+
+void usage(FILE *stream, const char *prog) {
+    fprintf(stream, "Usage: %s [OPTIONS] PATH\n", prog);
+    flag_print_options(stream);
+}
+
+int main(int argc, char **argv) {
+    bool *help = flag_bool("help", false, "Print this help message");
+
+    if (!flag_parse(argc, argv)) {
+        usage(stderr, flag_program_name());
+        flag_print_options(stderr);
+        exit(1);
+    }
+
+    if (*help) {
+        usage(stdout, flag_program_name());
+        exit(0);
+    }
+
+    int rest_argc = flag_rest_argc();
+    char **rest_argv = flag_rest_argv();
+
+    if (rest_argc <= 0) {
+        fprintf(stderr, "Error: no input file provided\n");
+        exit(1);
+    }
+
+    char *filename = NULL;
+    for (int i = 0; i < rest_argc; ++i) {
+        filename = rest_argv[i];
+        break;
+    }
+
+    FILE *file = fopen(filename, "r");
     assert(file != NULL);
 
     fseeko(file, 0, SEEK_END);
