@@ -23,6 +23,7 @@ void usage(FILE *stream, const char *prog) {
 
 int main(int argc, char **argv) {
     bool *help = flag_bool("help", false, "Print this help message");
+    bool *saved = flag_bool("saved", false, "Parse and print saved videos");
     bool *liked = flag_bool("liked", false, "Parse and print liked videos");
 
     if (!flag_parse(argc, argv)) {
@@ -69,6 +70,12 @@ int main(int argc, char **argv) {
     cJSON *activity = cJSON_GetObjectItem(json, "Activity");
 
     TikTok_JSON_Keys key;
+
+    if (*saved) {
+        key.base = "Favorite Videos";
+        key.items = "FavoriteVideoList";
+        key.result = "Link";
+    }
 
     if (*liked) {
         key.base = "Like List";
