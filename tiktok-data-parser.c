@@ -10,6 +10,10 @@
 #define FLAG_IMPLEMENTATION
 #include "flag.h"
 
+#ifndef VERSION
+char *VERSION;
+#endif // VERSION
+
 typedef struct {
     char *base;
     char *items;
@@ -25,6 +29,7 @@ int main(int argc, char **argv) {
     bool *help = flag_bool("help", false, "Print this help message");
     bool *saved = flag_bool("saved", false, "Parse and print saved videos");
     bool *liked = flag_bool("liked", false, "Parse and print liked videos");
+    bool *version = flag_bool("version", false, "Print installed version");
 
     if (!flag_parse(argc, argv)) {
         usage(stderr, flag_program_name());
@@ -34,6 +39,11 @@ int main(int argc, char **argv) {
 
     if (*help) {
         usage(stdout, flag_program_name());
+        exit(0);
+    }
+
+    if (*version) {
+        printf("%s %s\n", flag_program_name(), VERSION);
         exit(0);
     }
 
