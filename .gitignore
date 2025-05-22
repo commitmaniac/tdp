@@ -1,4 +1,6 @@
 *.json
+*.txt
+*.zip
 tdp
 
 .DS_Store
