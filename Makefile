@@ -12,13 +12,16 @@ CJSON_CFLAGS ?= $(shell pkg-config --cflags libcjson)
 CJSON_LIBS   ?= $(shell pkg-config --libs libcjson)
 endif
 
+SRC := tiktok-data-parser.c
+BIN ?= tdp
+
 ifeq ($(STATIC),1)
-all: libcjson.a tdp
+all: libcjson.a $(BIN)
 else
-all: tdp
+all: $(BIN)
 endif
 
-tdp: tiktok-data-parser.c
+$(BIN): $(SRC)
 	$(CC) -o $@ $< -DVERSION=\"$(VERSION)\" $(CJSON_CFLAGS) $(CJSON_LIBS)
 
 cJSON.o: cJSON.c
@@ -30,4 +33,4 @@ libcjson.a: cJSON.o
 .PHONY: clean
 
 clean:
-	rm -rf *.o *.a tdp
+	rm -rf *.o *.a $(BIN)
