@@ -29,16 +29,18 @@ jobs:
           - os: ubuntu-24.04-arm
             arch: aarch64
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Build
-        run: make STATIC=1
+        run: make STATIC=1 BIN=tdp-${{ matrix.arch }}
 
       - name: Strip
         if: ${{ github.event_name == 'release' }}
-        run: strip tdp
+        run: strip tdp-${{ matrix.arch }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -48,7 +50,6 @@ jobs:
 
       - name: Upload artifact to release
         if: ${{ github.event_name == 'release' }}
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v2
         with:
-          file: tdp
-          asset_name: tdp-${{ matrix.arch }}
+          files: tdp-${{ matrix.arch}}
