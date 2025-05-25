@@ -5,7 +5,11 @@
 #include <stdlib.h>
 #include <assert.h>
 
+#ifdef CJSON_LOCAL
+#include "cJSON.h"
+#else
 #include <cjson/cJSON.h>
+#endif
 
 #define FLAG_IMPLEMENTATION
 #include "flag.h"
