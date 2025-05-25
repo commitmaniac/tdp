@@ -68,9 +68,9 @@ int main(int argc, char **argv) {
     FILE *file = fopen(filename, "r");
     assert(file != NULL);
 
-    fseeko(file, 0, SEEK_END);
-    long f_size = ftello(file);
-    fseeko(file, 0, SEEK_SET);
+    fseek(file, 0, SEEK_END);
+    long f_size = ftell(file);
+    fseek(file, 0, SEEK_SET);
 
     char *buff = malloc(f_size + 1);
     assert(buff != NULL);
