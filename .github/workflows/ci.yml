@@ -46,7 +46,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tdp-${{ matrix.arch }}
-          path: tdp
+          path: tdp-${{ matrix.arch }}
 
       - name: Upload artifact to release
         if: ${{ github.event_name == 'release' }}
