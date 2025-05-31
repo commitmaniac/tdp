@@ -26,8 +26,13 @@ jobs:
         include:
           - os: ubuntu-24.04
             arch: x86_64
+            platform: linux
           - os: ubuntu-24.04-arm
             arch: aarch64
+            platform: linux
+          - os: ubuntu-24.04
+            arch: x86_64
+            platform: windows
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -35,21 +40,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        if: ${{ matrix.platform == 'windows' }}
+        run: sudo apt install gcc-mingw-w64-x86-64
+
+      - name: Setup environment
+        if: ${{ matrix.platform == 'windows' }}
+        run: |
+          echo "CC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
+          echo "AR=x86_64-w64-mingw32-ar" >> $GITHUB_ENV
+          if [ "${{ matrix.platform}}" = "windows" ]; then
+            echo "EXT=.exe" >> $GITHUB_ENV
+          else
+            echo "EXT=" >> $GITHUB_ENV
+          fi
+
       - name: Build
-        run: make STATIC=1 BIN=tdp-${{ matrix.arch }}
+        run: |
+          make STATIC=1 BIN=tdp-${{ matrix.platform }}-${{ matrix.arch }}
 
       - name: Strip
         if: ${{ github.event_name == 'release' }}
-        run: strip tdp-${{ matrix.arch }}
+        run: |
+          strip tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tdp-${{ matrix.arch }}
-          path: tdp-${{ matrix.arch }}
+          name: tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
+          path: tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
 
       - name: Upload artifact to release
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2
         with:
-          files: tdp-${{ matrix.arch}}
+          files: tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
