@@ -25,7 +25,7 @@ typedef struct {
 } TikTok_JSON_Keys;
 
 void usage(FILE *stream, const char *prog) {
-    fprintf(stream, "Usage: %s [OPTIONS] PATH\n", prog);
+    fprintf(stream, "Usage: %s [OPTIONS] FILE\n", prog);
     flag_print_options(stream);
 }
 
@@ -59,12 +59,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    char *filename = NULL;
-    for (int i = 0; i < rest_argc; ++i) {
-        filename = rest_argv[i];
-        break;
-    }
-
+    char *filename = rest_argv[0];
     FILE *file = fopen(filename, "r");
     assert(file != NULL);
 
@@ -81,6 +76,7 @@ int main(int argc, char **argv) {
     fclose(file);
 
     cJSON *json = cJSON_Parse(buff);
+    free(buff);
     cJSON *activity = cJSON_GetObjectItem(json, "Activity");
 
     TikTok_JSON_Keys key;
@@ -89,23 +85,26 @@ int main(int argc, char **argv) {
         key.base = "Favorite Videos";
         key.items = "FavoriteVideoList";
         key.result = "Link";
-    }
-
-    if (*liked) {
+    } else if (*liked) {
         key.base = "Like List";
         key.items = "ItemFavoriteList";
         key.result = "link";
+    } else {
+        usage(stderr, flag_program_name());
+        fprintf(stderr, "Error: no valid option provided\n");
+        cJSON_Delete(json);
+        exit(1);
     }
 
     cJSON *base = cJSON_GetObjectItem(activity, key.base);
     cJSON *items = cJSON_GetObjectItem(base, key.items);
-    cJSON *video = NULL;
+    cJSON *video;
     cJSON_ArrayForEach(video, items) {
         cJSON *link = cJSON_GetObjectItem(video, key.result);
         char *result = cJSON_GetStringValue(link);
         printf("%s\n", result);
     }
 
-    cJSON_free(json);
+    cJSON_Delete(json);
     return 0;
 }
