@@ -1,7 +1,7 @@
 ifneq (,$(wildcard .git))
 VERSION ?= $(shell git describe --tags)
 else
-VERSION ?= 1.0.1
+VERSION ?= 1.0.2
 endif
 
 ifeq ($(STATIC),1)
