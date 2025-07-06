@@ -22,7 +22,7 @@ all: $(BIN)
 endif
 
 $(BIN): $(SRC)
-	$(CC) -o $@ $< -DVERSION=\"$(VERSION)\" $(CJSON_CFLAGS) $(CJSON_LIBS)
+	$(CC) -o $@ $< -DVERSION=\"$(VERSION)\" $(CJSON_CFLAGS) $(CJSON_LIBS) $(CFLAGS) $(LDFLAGS)
 
 cJSON.o: cJSON.c
 	$(CC) -c -o $@ $<
