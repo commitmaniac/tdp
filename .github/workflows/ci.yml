@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - '**'
     paths:
       - '*.c'
       - '*.h'
@@ -45,11 +47,11 @@ jobs:
         run: sudo apt install gcc-mingw-w64-x86-64
 
       - name: Setup environment
-        if: ${{ matrix.platform == 'windows' }}
         run: |
-          echo "CC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
-          echo "AR=x86_64-w64-mingw32-ar" >> $GITHUB_ENV
-          if [ "${{ matrix.platform}}" = "windows" ]; then
+          echo "BIN=tdp-${{ matrix.platform }}-${{ matrix.arch }}" >> $GITHUB_ENV
+          if [ "${{ matrix.platform }}" = "windows" ]; then
+            echo "CC=x86_64-w64-mingw32-gcc" >> $GITHUB_ENV
+            echo "AR=x86_64-w64-mingw32-ar" >> $GITHUB_ENV
             echo "EXT=.exe" >> $GITHUB_ENV
           else
             echo "EXT=" >> $GITHUB_ENV
@@ -57,21 +59,21 @@ jobs:
 
       - name: Build
         run: |
-          make STATIC=1 BIN=tdp-${{ matrix.platform }}-${{ matrix.arch }}
+          make LOCAL=1 STATIC=1
 
       - name: Strip
         if: ${{ github.event_name == 'release' }}
         run: |
-          strip tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
+          strip ${{ env.BIN }}${{ env.EXT }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
-          path: tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
+          name: ${{ env.BIN }}
+          path: ${{ env.BIN }}${{ env.EXT }}
 
       - name: Upload artifact to release
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2
         with:
-          files: tdp-${{ matrix.platform }}-${{ matrix.arch }}${{ env.EXT }}
+          files: ${{ env.BIN }}${{ env.EXT }}
