@@ -1,7 +1,16 @@
-// flag.h -- v1.1.0 -- command-line flag parsing
+// flag.h -- v1.2.1 -- command-line flag parsing
 //
 //   Inspired by Go's flag module: https://pkg.go.dev/flag
 //
+// Macros API:
+// - FLAG_LIST_INIT_CAP - initial capacity of the Flag_List Dynamic Array.
+// - FLAGS_CAP - how many flags you can define.
+// - FLAG_PUSH_DASH_DASH_BACK - make flag_parse() retain "--" in the rest args
+//   (available via flag_rest_argc() and flag_rest_argv()). Useful when you need
+//   to know whether flag_parse() has stopped due to encountering "--" or due to
+//   encountering a non-flag. Ideally this should've been a default behavior,
+//   but it breaks backward compatibility. Hence it's a feature macro.
+//   TODO: make FLAG_PUSH_DASH_DASH_BACK a default behavior on a major version upgrade.
 #ifndef FLAG_H_
 #define FLAG_H_
 
@@ -218,9 +227,15 @@ bool flag_parse(int argc, char **argv)
         }
 
         if (strcmp(flag, "--") == 0) {
-            // NOTE: but if it's the terminator we don't need to push it back
+#ifdef FLAG_PUSH_DASH_DASH_BACK
+            // NOTE: pushing dash dash back into args as requested by the user
+            c->rest_argc = argc + 1;
+            c->rest_argv = argv - 1;
+#else
+            // NOTE: not pushing dash dash back into args for backward compatibility
             c->rest_argc = argc;
             c->rest_argv = argv;
+#endif // FLAG_PUSH_DASH_DASH_BACK
             return true;
         }
 
@@ -362,24 +377,32 @@ void flag_print_options(FILE *stream)
     for (size_t i = 0; i < c->flags_count; ++i) {
         Flag *flag = &c->flags[i];
 
-        fprintf(stream, "    -%s\n", flag->name);
-        fprintf(stream, "        %s\n", flag->desc);
         static_assert(COUNT_FLAG_TYPES == 5, "Exhaustive flag type defaults printing");
         switch (c->flags[i].type) {
         case FLAG_LIST:
+            fprintf(stream, "    -%s <str> ... -%s <str> ...\n", flag->name, flag->name);
+            fprintf(stream, "        %s\n", flag->desc);
             break;
         case FLAG_BOOL:
+            fprintf(stream, "    -%s\n", flag->name);
+            fprintf(stream, "        %s\n", flag->desc);
             if (flag->def.as_bool) {
                 fprintf(stream, "        Default: %s\n", flag->def.as_bool ? "true" : "false");
             }
             break;
         case FLAG_UINT64:
+            fprintf(stream, "    -%s <int>\n", flag->name);
+            fprintf(stream, "        %s\n", flag->desc);
             fprintf(stream, "        Default: %" PRIu64 "\n", flag->def.as_uint64);
             break;
         case FLAG_SIZE:
+            fprintf(stream, "    -%s <int>\n", flag->name);
+            fprintf(stream, "        %s\n", flag->desc);
             fprintf(stream, "        Default: %zu\n", flag->def.as_size);
             break;
         case FLAG_STR:
+            fprintf(stream, "    -%s <str>\n", flag->name);
+            fprintf(stream, "        %s\n", flag->desc);
             if (flag->def.as_str) {
                 fprintf(stream, "        Default: %s\n", flag->def.as_str);
             }
@@ -427,6 +450,9 @@ void flag_print_error(FILE *stream)
 /*
    Revision history:
 
+     1.2.1 (2025-07-04) flag_print_options: denote expected argument types
+                        flag_print_options: indicate flag list usage more clearly
+     1.2.0 (2025-05-31) Introduce FLAG_PUSH_DASH_DASH_BACK (by @nullnominal)
      1.1.0 (2025-05-09) Introduce flag list
      1.0.0 (2025-03-03) Initial release
                         Save program_name in the context
