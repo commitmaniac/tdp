@@ -3,6 +3,6 @@
 *.json
 *.txt
 *.zip
-tdp
+tdp*
 
 .DS_Store

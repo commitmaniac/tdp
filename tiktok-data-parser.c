@@ -10,7 +10,6 @@
 #endif /* CJSON_LOCAL */
 
 #define FLAG_IMPLEMENTATION
-#define FLAG_PUSH_DASH_DASH_BACK
 #include "flag.h"
 
 #include <assert.h>
@@ -68,6 +67,7 @@ int main(int argc, char **argv) {
     bool *help = flag_bool("help", false, "Print this help message");
     bool *saved = flag_bool("saved", false, "Parse and print saved videos");
     bool *liked = flag_bool("liked", false, "Parse and print liked videos");
+    bool *history = flag_bool("history", false, "Parse and print video browsing history");
     bool *version = flag_bool("version", false, "Print installed version");
 
     if (!flag_parse(argc, argv)) {
@@ -76,29 +76,30 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    argc = flag_rest_argc();
+    argv = flag_rest_argv();
+
     if (*help) {
         flag_program_usage(stderr);
-        exit(0);
+        return 0;
     }
 
     if (*version) {
-        printf("%s %s\n", flag_program_name(), VERSION);
-        exit(0);
+        printf("%s %s (cJSON %s)\n", flag_program_name(), VERSION, cJSON_Version());
+        return 0;
     }
 
-    int rest_argc = flag_rest_argc();
-    char **rest_argv = flag_rest_argv();
-    if (rest_argc <= 0) {
-        fprintf(stderr, "Error: no input file provided\n");
-        exit(1);
+    if (argc <= 0) {
+        fprintf(stderr, "Error: no data file provided\n");
+        return 1;
     }
 
-    char *path = rest_argv[0];
+    char *path = argv[0];
     String_Builder sb = {0};
 
     if (!read_entire_file(path, &sb)) {
-        fprintf(stderr, "Error: could not read provided input file\n");
-        exit(1);
+        fprintf(stderr, "Error: could not read provided data file\n");
+        return 1;
     }
 
     cJSON *json = cJSON_Parse(sb.items);
@@ -114,10 +115,14 @@ int main(int argc, char **argv) {
         key.base = "Like List";
         key.items = "ItemFavoriteList";
         key.result = "link";
+    } else if (*history) {
+        key.base = "Video Browsing History";
+        key.items = "VideoList";
+        key.result = "Link";
     } else {
         flag_program_usage(stderr);
         fprintf(stderr, "Error: no valid option provided\n");
-        exit(1);
+        return 1;
     }
 
     cJSON *base = cJSON_GetObjectItem(activity, key.base);
