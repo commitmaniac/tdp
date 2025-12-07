@@ -1,7 +1,7 @@
 ifneq (,$(wildcard .git))
 VERSION ?= $(shell git describe --tags)
 else
-VERSION ?= 1.0.2
+VERSION ?= 1.1.0
 endif
 
 ifeq ($(LOCAL),1)
@@ -25,7 +25,7 @@ all: $(BIN)
 endif
 
 $(BIN): $(SRC)
-	$(CC) -o $@ $< -DVERSION=\"$(VERSION)\" $(CJSON_CFLAGS) $(CJSON_LIBS) $(CFLAGS) $(LDFLAGS)
+	$(CC) -std=c11 -o $@ $< -DVERSION=\"$(VERSION)\" $(CJSON_CFLAGS) $(CJSON_LIBS) $(CFLAGS) $(LDFLAGS)
 
 cJSON.o: cJSON.c
 	$(CC) -c -o $@ $<
