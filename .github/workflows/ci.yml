@@ -67,13 +67,13 @@ jobs:
           strip ${{ env.BIN }}${{ env.EXT }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ env.BIN }}
           path: ${{ env.BIN }}${{ env.EXT }}
 
       - name: Upload artifact to release
         if: ${{ github.event_name == 'release' }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ env.BIN }}${{ env.EXT }}
